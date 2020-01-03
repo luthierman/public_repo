@@ -1,0 +1,163 @@
+---
+title: "Weather data scrape"
+author: "David Heagy"
+date: "9/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(rvest)
+
+v <- c("Year", 
+               "Day of Year", 
+               "Station Number",
+               "Air Temp - Max", #Celsius
+               "Air Temp - Min",
+               "Air Temp - Mean",
+               "RH - Max", # %
+               "RH - Min",
+               "RH - Mean",
+               "VPD - Mean",
+               "Solar Rad. - Total",
+               "Precipitation - Total",
+               "4\" Soil Temp - Max  ( = 2\" prior to 1999 )",
+               "4\" Soil Temp - Min  ( = 2\" prior to 1999 )",
+               "4\" Soil Temp - Mean  ( = 2\" prior to 1999 )",
+               "20\" Soil Temp - Max  ( = 4\" prior to 1999 )",
+               "20\" Soil Temp - Min  ( = 4\" prior to 1999 )",
+               "20\" Soil Temp - Mean  ( = 4\" prior to 1999 )",
+               "Wind Speed - Mean",
+               "Wind Vector Magnitude for Day",
+               "Wind Vector Direction for Day",
+               "Wind Direction Standard Deviation for Day",
+               "Max Wind Speed",
+               "Heat Units (30/12.8 C) (86/55 F)",
+               "Reference Evapotranspiration (ETo) = Original AZMET",
+               "Reference Evapotranspiration (ETos) = Penman-Monteith",
+               "Actual Vapor Pressure - Daily Mean",
+               "Dewpoint, Daily Mean")
+```
+Source of files: https://cals.arizona.edu/azmet/38.htm
+For more information on legends and abbreviations (daily files): https://cals.arizona.edu/azmet/raw2003.htm
+
+Also, Elevation: 840 meters (2756 ft)
+
+USDA soil survey (2008): 
+https://soilseries.sc.egov.usda.gov/OSD_Docs/S/SAHUARITA.html
+
+USDA Soil survey (p 83, #72): https://www.nrcs.usda.gov/Internet/FSE_MANUSCRIPTS/arizona/AZ669/0/pima.pdf
+
+USDA Soil survey (p 187) : https://www.nrcs.usda.gov/Internet/FSE_MANUSCRIPTS/arizona/AZ703/0/tohono.pdf
+
+```{r}
+url <- paste("https://cals.arizona.edu/azmet/data/38",13:19,"rd.txt", sep= "")
+# raw daily weather datasets for Sahaurita from 2013-2019
+df13 <- read.csv(url[1])
+df14 <- read.csv(url[2])
+df15 <- read.csv(url[3])
+df16 <- read.csv(url[4])
+df17 <- read.csv(url[5])
+df18 <- read.csv(url[6])
+df19 <- read.csv(url[7])
+# renames columns of individual data set 
+names(df13) <- v
+names(df14) <- v
+names(df15) <- v
+names(df16) <- v
+names(df17) <- v
+names(df18) <- v
+names(df19) <- v
+# now can call on each or whole VVVV
+df_13_to_19 <- rbind(df13, df14, df15,df16, df17, df18, df19)
+
+```
+
+
+
+```{r}
+x <- df19$"Air Temp - Max"
+y <- df19$"Air Temp - Min"
+z <- df19$"Air Temp - Mean"
+mean(x)
+mean(y)
+mean(z)
+C_F <- function(C) {
+  return ((C *9/5) + 32)
+}
+C_F(29.72)
+```
+
+```{r}
+p13 <- df13$"Precipitation - Total"
+p14 <- df14$"Precipitation - Total"
+p15 <- df15$"Precipitation - Total"
+p16 <- df16$"Precipitation - Total"
+p17 <- df17$"Precipitation - Total"
+p18 <- df18$"Precipitation - Total" # in inches
+p19 <- df19$"Precipitation - Total"
+
+sum(p13)
+sum(p14)
+sum(p15)
+sum(p16)
+sum(p17)
+sum(p18)
+sum(p19)
+yearly_rain <- c(sum(p13), sum(p14), sum(p15), sum(p16), sum(p17), sum(p18), sum(p19))
+names(yearly_rain) <- c("2013", "2014", "2015", "2016", "2017", "2018", "2019")
+barplot(yearly_rain, ylab = "Collective Inches in rain over year")
+
+s <- sd(yearly_rain)
+m <- mean(yearly_rain)
+m+(2*s)
+m-(2*s)
+summary(yearly_rain)
+```
+Rainfall is below expectation.  
+
+Since the Orly parameters of rain is 800m^3 (assuming we just need to take cubic root, area and height equal), which is appx equal to 9.28m = 365 inches
+
+I just summed all the rain over the year for each year in Sahaurita, and then averaged the collective sums and took standard deviations. 
+1sd
+
+153.5212, 329.9017
+
+2sd
+
+65.33092, 418.0919
+
+
+Also, since median is less than mean, it is left-skewed.
+
+```{r}
+names(df19)
+```
+
+
+
+
+
+For outputting csv file to use in tableau:
+```{r}
+write.csv(df_13_to_19, "Arizona_ultimate.csv")
+```
+  
+Experimenting with rvest  
+```{r}
+result <- read_html("https://streamflow.watershedconnection.com/Dwr")
+```
+  
+```{r}
+s <- html_nodes(result, ".values")
+s
+
+```
+```{r}
+df2
+```
+  
+  
